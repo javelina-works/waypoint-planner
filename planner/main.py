@@ -54,8 +54,8 @@ def upload_callback(attr, old, new):
         rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
         image_source.data = {"image": [rgba_image]}
 
-        image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
-        image_figure.y_range = Range1d(bounds.bottom, bounds.top)
+        # image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
+        # image_figure.y_range = Range1d(bounds.bottom, bounds.top)
         # image_figure.height = new_image.
         # image_figure.height = bounds.top - bounds.bottom
         # image_figure.width = bounds.right - bounds.left
@@ -71,10 +71,10 @@ def upload_callback(attr, old, new):
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
 file_upload.on_change("value", upload_callback)
 
-image_container = column(image_figure)
+image_container = column(file_upload, image_figure)
 image_container.sizing_mode = "stretch_both"
 
-data_col = create_data_col(file_upload, image_figure)
+data_col = create_data_col(image_figure)
 
 
 # Layout the widgets and figures
