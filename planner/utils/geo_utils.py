@@ -1,22 +1,61 @@
 import numpy as np
 from rasterio.io import MemoryFile
 from matplotlib import cm
+import os
+import base64
 
-def process_geotiff(file_path):
+
+def process_geotiff(file_contents, logger):
     """Load and preprocess GeoTIFF."""
-    with open(file_path, "rb") as f:
-        decoded = f.read()
-    with MemoryFile(decoded) as memfile:
-        with memfile.open() as src:
-            r, g, b = [src.read(i).astype(float) for i in range(1, 4)]
-            r_norm, g_norm, b_norm = [
-                (band - np.min(band)) / (np.max(band) - np.min(band))
-                for band in (r, g, b)
-            ]
-            alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1)
-            rgba_image = np.dstack((r_norm, g_norm, b_norm, alpha))
-            bounds = src.bounds
-            return rgba_image, (r_norm, g_norm, b_norm), bounds
+    # global r_norm, g_norm, b_norm, non_transparent_mask, rgba_image, alpha, bounds
+
+    decoded = None  # To hold the decoded or raw data
+    # file_contents = fix_base64_padding(file_contents) # Fix padding before decoding
+
+    # Handle local file or uploaded file
+    if os.path.isfile(file_contents):
+        logger.debug("Loaded GeoTIFF from local file.")
+        with open(file_contents, "rb") as f:
+            decoded = f.read()
+
+    elif "," in file_contents:
+        logger.debug("Uploaded file with Base64 header.")
+        _, encoded = file_contents.split(",", 1)
+        decoded = base64.b64decode(encoded)
+
+    else:
+        logger.debug("Uploaded file without Base64 header.")
+        decoded = base64.b64decode(file_contents)
+
+    try:
+        with MemoryFile(decoded) as memfile:
+            with memfile.open() as src:
+                image, bounds = extract_image_data(src)
+    except Exception as e:
+        logger.error(f"Error during file processing: {e}", exc_info=True)
+
+    logger.debug("Success processing image")
+    return image, bounds
+
+def extract_image_data(src):
+    """
+    Extract RGBA image and bounds from GeoTIFF.
+    """
+    r, g, b = [src.read(i).astype(float) for i in range(1, 4)]
+    r_norm = (r - np.min(r)) / (np.max(r) - np.min(r))
+    g_norm = (g - np.min(g)) / (np.max(g) - np.min(g))
+    b_norm = (b - np.min(b)) / (np.max(b) - np.min(b))
+    alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1)
+    image = np.dstack((r_norm, g_norm, b_norm, alpha))
+    rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2]))
+    bounds = src.bounds  # Geographic bounds in WGS84
+    return rgba_image, bounds
+
+
+# def to_bokeh_rgba(image):
+#     """Convert a normalized RGBA image to uint32 for Bokeh."""
+#     return np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2]))
+
 
 def calculate_index(index_name, bands, alpha, colormap="RdYlGn"):
     """Calculate vegetation index and return a normalized RGBA image."""
@@ -33,9 +72,6 @@ def calculate_index(index_name, bands, alpha, colormap="RdYlGn"):
     colored_index[..., -1] = alpha
     return colored_index
 
-def to_bokeh_rgba(image):
-    """Convert a normalized RGBA image to uint32 for Bokeh."""
-    return np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2]))
 
 def compute_histogram(index_data):
     """Compute histogram of vegetation index."""
