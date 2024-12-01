@@ -3,8 +3,10 @@ from bokeh.layouts import column, row
 from bokeh.models import (
     CrosshairTool, TableColumn, DataTable, CustomJS,
     ColumnDataSource, PointDrawTool, Button, Div,
+    FileInput, 
 )
 
+from utils.geo_utils import process_geotiff
 
 def create_image_figure(bounds, image_source):
     """Create the Bokeh figure for displaying the image."""
@@ -29,7 +31,25 @@ def create_image_figure(bounds, image_source):
     # p.output_backend = "webgl"
     return p
 
-def create_planner_column(image_figure):
+def create_file_upload():
+    # FileInput widget
+    file_input = FileInput(accept=".tif,.tiff")
+
+    # Callback for file upload
+    def upload_callback(attr, old, new):
+        """Handle file upload."""
+        file_contents = file_input.value
+        if file_contents:
+            process_geotiff(file_contents)  # Remove header and decode
+
+    # Goes with file_input object
+    # Moved here for scoping bc using globals like a dumbass
+    file_input.on_change("value", upload_callback)
+
+    return file_input
+
+
+def create_data_col(image_figure):
 
     crosshair = CrosshairTool()
     image_figure.add_tools(crosshair)
@@ -119,16 +139,16 @@ def create_planner_column(image_figure):
 
     # Organize interactive image into a column layout
     # ===============================================
-    image_container = column(image_figure)
-    image_container.sizing_mode = "stretch_both"
+    # image_container = column(image_figure)
+    # image_container.sizing_mode = "stretch_both"
 
     data_col = column(coords_display, save_button, data_table)
     data_col.width = 400
     data_col.min_width = 400
     data_col.sizing_mode = "scale_height"
 
-    planner_row = row(image_container, data_col)
-    planner_row.sizing_mode = "stretch_both"
-    return planner_row
+    # planner_row = row(image_container, data_col)
+    # planner_row.sizing_mode = "stretch_both"
+    return data_col
 
 

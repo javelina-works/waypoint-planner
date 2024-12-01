@@ -21,14 +21,7 @@ logger = setup_logger(name="my_project_logger", log_level=logging.DEBUG)
 # tiff_file = "input/ESPG-4326-orthophoto.tif"  # Replace with your file path
 tiff_file = "input/MADRID_RGB.tif"  # Replace with your file path
 
-image_source = ColumnDataSource(
-    data={"image": []}, 
-    # default_values={"image": "input/ESPG-4326-orthophoto.tif"},
-)
-upload_message = Div(text="Upload a GeoTIFF to display.", width=400, height=30)
 
-# FileInput widget
-file_input = FileInput(accept=".tif,.tiff")
 
 def fix_base64_padding(data: str) -> str:
     """Fix padding for Base64 strings."""
@@ -87,13 +80,6 @@ def process_geotiff(file_contents):
 
             # return rgba_image
 
-
-# Callback for file upload
-def upload_callback(attr, old, new):
-    """Handle file upload."""
-    file_contents = file_input.value
-    if file_contents:
-        process_geotiff(file_contents)  # Remove header and decode
 
 # DEBUGGING
 def inspect_index(index):
@@ -280,10 +266,6 @@ def update_image(attr, old, new):
     line_hist_source.data = {"x": midpoints, "y": hist}  # Update line graph source
 
 view_select.on_change("value", update_image)
-
-# Goes with file_input object
-# Moved here for scoping bc using globals like a dumbass
-file_input.on_change("value", upload_callback, update_image)
 
 # Step 6: Dropdown for colormap selection
 color_select = Select(
