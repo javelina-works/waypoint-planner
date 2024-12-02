@@ -64,7 +64,8 @@ def extract_image_data(src):
         norm_bands = (bands - mins) / np.where(ptps > 0, ptps, 1)  # Avoid division by zero
 
         # Transpose to height x width x 4 for RGBA format
-        image = rgba_image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
+        image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
+        # image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0)))
 
         # rgba_image = np.dstack(norm_bands)
         # norm_bands is (4, height, width)
@@ -75,7 +76,12 @@ def extract_image_data(src):
         #     (norm_bands[3].astype(np.uint32))          # Alpha channel
         # )
 
-        rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
+
+        rgba_image = (image * 255).astype(np.uint8)
+        rgba_image = rgba_image.view(dtype=np.uint32)
+        rgba_image = rgba_image.reshape(rgba_image.shape[:2])
+        rgba_image = np.flipud(rgba_image)
+        # rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
 
         # print(f"Same image? {np.array_equiv(tran_image,image)}")
 
