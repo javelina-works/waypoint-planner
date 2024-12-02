@@ -30,9 +30,9 @@ jobs:
           file: ./Dockerfile # NOT building from full compose
           push: true
           tags: |
-            ghcr.io/javelina-works/waypoint-planner :latest
-            ghcr.io/javelina-works/waypoint-planner :${{ github.sha }}
-            ghcr.io/javelina-works/waypoint-planner :${{ github.ref_name }}
+            ghcr.io/javelina-works/waypoint-planner:latest
+            ghcr.io/javelina-works/waypoint-planner:${{ github.sha }}
+            ghcr.io/javelina-works/waypoint-planner:${{ github.ref_name }}
 
   deploy:
     runs-on: ubuntu-latest
