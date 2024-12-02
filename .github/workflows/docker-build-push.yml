@@ -29,8 +29,8 @@ jobs:
           context: .
           file: ./Dockerfile # NOT building from full compose
           push: true
-          cache-from: type=registry,ref=ghcr.io/avelina-works/waypoint-planner:latest
-          cache-to: type=registry,ref=ghcr.io/avelina-works/waypoint-planner:latest,mode=max
+          cache-from: type=registry,ref=ghcr.io/javelina-works/waypoint-planner:latest
+          cache-to: type=registry,ref=ghcr.io/javelina-works/waypoint-planner:latest,mode=max
           tags: |
             ghcr.io/javelina-works/waypoint-planner:latest
             ghcr.io/javelina-works/waypoint-planner:${{ github.sha }}
