@@ -24,8 +24,8 @@ marker_source = ColumnDataSource(data={"x": [], "y": [], "label": []})
 default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
 
 
-# tiff_file = "input/MADRID_RGB.tif"
-tiff_file = "input/ESPG-4326-orthophoto.tif"
+tiff_file = "input/MADRID_RGB.tif"
+# tiff_file = "input/ESPG-4326-orthophoto.tif"
 
 # Process initial data
 logger.info("Processing initial GeoTIFF file.")
