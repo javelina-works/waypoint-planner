@@ -53,9 +53,11 @@ def extract_image_data(src):
     """
     Extract RGBA image and bounds from GeoTIFF.
     """
+    num_bands = src.count
+    bounds = src.bounds # Geographic bounds in WGS84
 
-    # Expecting [0,255] RGBA image
-    if src.dtypes[0] == 'uint8' and src.count == 4:
+    # Expecting [0,255] RGBA image (4 bands)
+    if src.dtypes[0] == 'uint8' and num_bands == 4:
         
         # bands = src.read([1, 2, 3, 4]).astype(np.float32)  # R, G, B, A
 
@@ -74,23 +76,33 @@ def extract_image_data(src):
         image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
-        return rgba_image, src.bounds
+        return rgba_image, bounds
+
+    # [0,255], but only 3 bands this time
+    elif src.dtypes[0] == 'uint8' and num_bands == 3:
+        r,g,b = src.read([1, 2, 3]).astype(np.uint8)  # R, G, B
+        
+        alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 255).astype(np.uint8)  # Fully opaque except where RGB is all 0
+        image = np.dstack((r, g, b, alpha))
+        rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
+  
+        return rgba_image, bounds
 
     else:
-        # r, g, b = [src.read(i).astype(float) for i in range(1, 4)]
-        bands = src.read([1, 2, 3, 4])  # Shape: (3, height, width)
-        r, g, b, a = bands
+        r,g,b = src.read([1, 2, 3]).astype(np.float32)  # R, G, B
         
-        print(f"Alpha datatype: {src.dtypes[3]}")
         r_norm = (r - np.min(r)) / (np.max(r) - np.min(r))
         g_norm = (g - np.min(g)) / (np.max(g) - np.min(g))
         b_norm = (b - np.min(b)) / (np.max(b) - np.min(b))
-        alpha = (a - np.min(a)) / (np.max(a) - np.min(a))
+
+        if num_bands == 4:
+            a = src.read(4).astype(np.float32) # Read the alpha channel if it exists
+            alpha = (a - np.min(a)) / (np.max(a) - np.min(a))
+        else:
+            alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1).astype(float) # Create alpha channel
 
         image = np.dstack((r_norm, g_norm, b_norm, alpha))
         rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
-
-        bounds = src.bounds # Geographic bounds in WGS84
 
         return rgba_image, bounds
 
