@@ -54,44 +54,26 @@ def extract_image_data(src):
     Extract RGBA image and bounds from GeoTIFF.
     """
 
-    if src.dtypes[0] == 'uint8':
-        # Read all 4 bands at once (shape: 4 x height x width)
-        bands = src.read([1, 2, 3, 4]).astype(np.float32)  # R, G, B, A
+    # Expecting [0,255] RGBA image
+    if src.dtypes[0] == 'uint8' and src.count == 4:
+        
+        # bands = src.read([1, 2, 3, 4]).astype(np.float32)  # R, G, B, A
 
-        # Normalize bands (axis=1,2 applies normalization per band)
-        mins = bands.min(axis=(1, 2), keepdims=True)
-        ptps = np.ptp(bands, axis=(1, 2), keepdims=True)
-        norm_bands = (bands - mins) / np.where(ptps > 0, ptps, 1)  # Avoid division by zero
+        # # Normalize bands (axis=1,2 applies normalization per band)
+        # mins = bands.min(axis=(1, 2), keepdims=True)
+        # ptps = np.ptp(bands, axis=(1, 2), keepdims=True)
+        # norm_bands = (bands - mins) / np.where(ptps > 0, ptps, 1)  # Avoid division by zero
 
-        # Transpose to height x width x 4 for RGBA format
-        image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
-        # image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0)))
-
-        # rgba_image = np.dstack(norm_bands)
-        # norm_bands is (4, height, width)
-        # rgba_image = (
-        #     (norm_bands[0].astype(np.uint32) << 24) |  # Red channel
-        #     (norm_bands[1].astype(np.uint32) << 16) |  # Green channel
-        #     (norm_bands[2].astype(np.uint32) << 8)  |  # Blue channel
-        #     (norm_bands[3].astype(np.uint32))          # Alpha channel
-        # )
-
-
-        rgba_image = (image * 255).astype(np.uint8)
-        rgba_image = rgba_image.view(dtype=np.uint32)
-        rgba_image = rgba_image.reshape(rgba_image.shape[:2])
-        rgba_image = np.flipud(rgba_image)
+        # # Transpose to height x width x 4 for RGBA format
+        # image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
         # rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
+        # return rgba_image, src.bounds
 
-        # print(f"Same image? {np.array_equiv(tran_image,image)}")
-
-        print(f"Bands shape: {bands.shape}")           # (4, height, width)
-        print(f"Norm bands shape: {norm_bands.shape}")  # (height, width, 4)
-        print(f"RGBA image shape: {rgba_image.shape}")  # (height, width)
-        print(f"RGBA image min: {rgba_image.min()}, max: {rgba_image.max()}")
-        print(f"RGBA image dtype: {rgba_image.dtype}")
-
-
+        # Read all 4 bands at once (shape: 4 x height x width)
+        bands = src.read([1, 2, 3, 4]).astype(np.uint8)  # R, G, B, A
+        image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
+        rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
+  
         return rgba_image, src.bounds
 
     else:
