@@ -49,7 +49,6 @@ def inspect_index(index):
     print("Index median:", np.nanmedian(index))
     print("Index std:", np.nanstd(index))
 
-
 def extract_image_data(src):
     """
     Extract RGBA image and bounds from GeoTIFF.
@@ -60,18 +59,33 @@ def extract_image_data(src):
         bands = src.read([1, 2, 3, 4]).astype(np.float32)  # R, G, B, A
 
         # Normalize bands (axis=1,2 applies normalization per band)
-        # mins = np.min(bands, axis=(1, 2), keepdims=True)
-        # maxs = np.max(bands, axis=(1, 2), keepdims=True)  # Shape: (4, 1, 1)
-        mins = np.min(bands, axis=(1, 2), keepdims=True)  # Only normalize RGB
-        maxs = np.max(bands, axis=(1, 2), keepdims=True)
-        ranges = np.where(maxs > mins, maxs - mins, 1)    # Avoid division by zero
-        norm_bands = (bands - mins) / ranges 
-        
-        # ranges = np.ptp(bands, axis=(1, 2), keepdims=True)
-        # norm_bands = (bands - mins) / np.where(ranges > 0, ranges, 1)  # Avoid division by zero
+        mins = bands.min(axis=(1, 2), keepdims=True)
+        ptps = np.ptp(bands, axis=(1, 2), keepdims=True)
+        norm_bands = (bands - mins) / np.where(ptps > 0, ptps, 1)  # Avoid division by zero
 
         # Transpose to height x width x 4 for RGBA format
-        rgba_image = np.transpose(norm_bands, (1, 2, 0))
+        image = rgba_image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
+
+        # rgba_image = np.dstack(norm_bands)
+        # norm_bands is (4, height, width)
+        # rgba_image = (
+        #     (norm_bands[0].astype(np.uint32) << 24) |  # Red channel
+        #     (norm_bands[1].astype(np.uint32) << 16) |  # Green channel
+        #     (norm_bands[2].astype(np.uint32) << 8)  |  # Blue channel
+        #     (norm_bands[3].astype(np.uint32))          # Alpha channel
+        # )
+
+        rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
+
+        # print(f"Same image? {np.array_equiv(tran_image,image)}")
+
+        print(f"Bands shape: {bands.shape}")           # (4, height, width)
+        print(f"Norm bands shape: {norm_bands.shape}")  # (height, width, 4)
+        print(f"RGBA image shape: {rgba_image.shape}")  # (height, width)
+        print(f"RGBA image min: {rgba_image.min()}, max: {rgba_image.max()}")
+        print(f"RGBA image dtype: {rgba_image.dtype}")
+
+
         return rgba_image, src.bounds
 
     else:
@@ -79,33 +93,12 @@ def extract_image_data(src):
         bands = src.read([1, 2, 3, 4])  # Shape: (3, height, width)
         r, g, b, a = bands
         
-        inspect_index(a)
-        # inspect_index(g)
-        # inspect_index(b)
         print(f"Alpha datatype: {src.dtypes[3]}")
         r_norm = (r - np.min(r)) / (np.max(r) - np.min(r))
         g_norm = (g - np.min(g)) / (np.max(g) - np.min(g))
         b_norm = (b - np.min(b)) / (np.max(b) - np.min(b))
         alpha = (a - np.min(a)) / (np.max(a) - np.min(a))
-        # alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1)
 
-        inspect_index(r_norm)
-
-        # Determine if normalization is necessary
-        if src.dtypes[0] != 'uint8' or np.max(bands) > 255:
-            print("Normalizing bands...")
-            mins = np.min(bands, axis=(1, 2), keepdims=True)  # Only normalize RGB
-            maxs = np.max(bands, axis=(1, 2), keepdims=True)
-            bands = (bands - mins) / (maxs - mins) * 255  # Scale back to [0, 255]
-
-        # r, g, b, alpha = bands
-        # Use the existing alpha band directly
-        # alpha = (alpha / np.max(alpha) * 255).astype(np.uint8)  # Ensure alpha is in [0, 255]
-        # alpha = np.where(np.all(bands[:2] == 0, axis=0), 0, 1)
-        # alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1)
-
-        # Construct RGBA image
-        # image = np.dstack((r, g, b, alpha))
         image = np.dstack((r_norm, g_norm, b_norm, alpha))
         rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
 
