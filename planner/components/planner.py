@@ -59,8 +59,7 @@ def create_data_col(image_figure):
 
     # Button to save mission data to file
     # =====================================
-    save_button = Button(label="Save to File", button_type="success")
-
+    
     # Callback to save data to file
     def save_to_file():
         """Save the current DataTable values to a waypoints file."""
@@ -88,7 +87,51 @@ def create_data_col(image_figure):
 
         print(f"Waypoints have been exported to {waypoints_filename}")
 
-    save_button.on_click(save_to_file)
+    # save_button.on_click(save_to_file)
+
+    js_save_file = """
+    const data = source.data;
+    let fileContent = "QGC WPL 110\\n";  // Header for the MAVLink file
+
+    // Number of rows
+    const numPoints = data['x'].length;
+
+    if (numPoints === 0) {
+        alert("No points to save!");
+        return;
+    }
+
+    // Add home point (index 0)
+    fileContent += `0\\t1\\t0\\t3\\t0\\t0\\t0\\t0\\t${data['y'][0]}\\t${data['x'][0]}\\t100.000000\\t1\\n`;
+
+    // Add waypoints starting from index 1
+    for (let i = 1; i < numPoints; i++) {
+        fileContent += `${i}\\t0\\t0\\t16\\t0\\t0\\t0\\t0\\t${data['y'][i]}\\t${data['x'][i]}\\t100.000000\\t1\\n`;
+    }
+
+    // Create a downloadable blob
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element for download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gen2.waypoints";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    """
+
+    # Create a Bokeh Button
+    save_button = Button(label="Save to File", button_type="success")
+
+    # Attach the JS callback to the button
+    save_button.js_on_click(CustomJS(args=dict(source=marker_source), code=js_save_file))
+
 
 
     # DataTable to display clicked waypoints

@@ -53,12 +53,12 @@ def upload_callback(attr, old, new):
         
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
-        with cProfile.Profile() as pr:
-            rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
-        pr.dump_stats('image_process.prof')
+        rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
+        compressed_image = gzip.compress(rgba_image.tobytes())
 
-        image_source.data = {"image": [rgba_image]}
-        # image_source.data.emit()
+        with cProfile.Profile() as pr:
+            image_source.data = {"image": [rgba_image]}
+        pr.dump_stats('update_source.prof')
 
         # image_figure = create_image_figure(bounds, image_source)
 

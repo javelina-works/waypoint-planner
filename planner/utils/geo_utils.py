@@ -58,21 +58,7 @@ def extract_image_data(src):
 
     # Expecting [0,255] RGBA image (4 bands)
     if src.dtypes[0] == 'uint8' and num_bands == 4:
-        
-        # bands = src.read([1, 2, 3, 4]).astype(np.float32)  # R, G, B, A
-
-        # # Normalize bands (axis=1,2 applies normalization per band)
-        # mins = bands.min(axis=(1, 2), keepdims=True)
-        # ptps = np.ptp(bands, axis=(1, 2), keepdims=True)
-        # norm_bands = (bands - mins) / np.where(ptps > 0, ptps, 1)  # Avoid division by zero
-
-        # # Transpose to height x width x 4 for RGBA format
-        # image = np.ascontiguousarray(np.transpose(norm_bands, (1, 2, 0)))
-        # rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
-        # return rgba_image, src.bounds
-
-        # Read all 4 bands at once (shape: 4 x height x width)
-        bands = src.read([1, 2, 3, 4]).astype(np.uint8)  # R, G, B, A
+        bands = src.read([1, 2, 3, 4]).astype(np.uint8)  # R, G, B, A (shape: 4 x height x width)
         image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
@@ -81,9 +67,9 @@ def extract_image_data(src):
     # [0,255], but only 3 bands this time
     elif src.dtypes[0] == 'uint8' and num_bands == 3:
         r,g,b = src.read([1, 2, 3]).astype(np.uint8)  # R, G, B
-        
+
         alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 255).astype(np.uint8)  # Fully opaque except where RGB is all 0
-        image = np.dstack((r, g, b, alpha))
+        image = np.dstack((r, g, b, alpha)) # Add in our artifical alpha channel
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
         return rgba_image, bounds
@@ -105,11 +91,6 @@ def extract_image_data(src):
         rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
 
         return rgba_image, bounds
-
-
-# def to_bokeh_rgba(image):
-#     """Convert a normalized RGBA image to uint32 for Bokeh."""
-#     return np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2]))
 
 
 def calculate_index(index_name, bands, alpha, colormap="RdYlGn"):
