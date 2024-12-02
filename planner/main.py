@@ -9,8 +9,10 @@ from utils.geo_utils import process_geotiff
 from components.planner import create_data_col
 from components.map import create_image_figure
 
+import cProfile
 
 current_file = None
+global image_figure
 
 # Initialize logger
 logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
@@ -51,11 +53,27 @@ def upload_callback(attr, old, new):
         
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
-        rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
-        image_source.data = {"image": [rgba_image]}
+        with cProfile.Profile() as pr:
+            rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
+        pr.dump_stats('image_process.prof')
 
-        # image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
-        # image_figure.y_range = Range1d(bounds.bottom, bounds.top)
+        image_source.data = {"image": [rgba_image]}
+        # image_source.data.emit()
+
+        # image_figure = create_image_figure(bounds, image_source)
+
+        # Add a new renderer with the updated image
+        image_figure.image_rgba(
+            image="image",
+            source=image_source,
+            x=bounds.left,
+            y=bounds.bottom,
+            dw=bounds.right - bounds.left,
+            dh=bounds.top - bounds.bottom,
+        )
+
+        image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
+        image_figure.y_range = Range1d(bounds.bottom, bounds.top)
         # image_figure.height = new_image.
         # image_figure.height = bounds.top - bounds.bottom
         # image_figure.width = bounds.right - bounds.left

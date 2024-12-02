@@ -41,11 +41,18 @@ def extract_image_data(src):
     """
     Extract RGBA image and bounds from GeoTIFF.
     """
-    r, g, b = [src.read(i).astype(float) for i in range(1, 4)]
-    r_norm = (r - np.min(r)) / (np.max(r) - np.min(r))
-    g_norm = (g - np.min(g)) / (np.max(g) - np.min(g))
-    b_norm = (b - np.min(b)) / (np.max(b) - np.min(b))
-    alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1)
+    # r, g, b = [src.read(i).astype(float) for i in range(1, 4)]
+    bands = src.read([1, 2, 3]).astype(float)  # Shape: (3, height, width)
+
+    # Normalize bands
+    mins = np.min(bands, axis=(1, 2), keepdims=True)
+    maxs = np.max(bands, axis=(1, 2), keepdims=True)
+    norm_bands = (bands - mins) / (maxs - mins)
+    r_norm, g_norm, b_norm = norm_bands
+
+    # Create alpha mask
+    alpha = np.where(np.all(bands == 0, axis=0), 0, 1)
+    
     image = np.dstack((r_norm, g_norm, b_norm, alpha))
     rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2]))
     bounds = src.bounds  # Geographic bounds in WGS84
