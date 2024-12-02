@@ -28,13 +28,13 @@ default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
 
 # Initialize Global Variables
 # tiff_file = "input/MADRID_RGB.tif"
-# tiff_file = "input/ESPG-4326-orthophoto.tif"
-tiff_file = "input/Sample-Tiff-File-download-for-Testing.tiff"
+tiff_file = "input/ESPG-4326-orthophoto.tif"
+# tiff_file = "input/Sample-Tiff-File-download-for-Testing.tiff"
 
 # Process initial data
-# logger.info("Processing initial GeoTIFF file.")
-# rgba_image, bounds = process_geotiff(tiff_file, logger)
-# image_source.data = {"image": [rgba_image]}
+logger.info("Processing initial GeoTIFF file.")
+rgba_image, bounds = process_geotiff(tiff_file, logger)
+image_source.data = {"image": [rgba_image]}
 
 # Create figures
 image_figure = create_image_figure(default_bounds, image_source)
