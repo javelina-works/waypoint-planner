@@ -5,7 +5,7 @@ from bokeh.models import (
     FileInput, 
 )
 
-from utils.geo_utils import process_geotiff
+from utils.geo_utils import process_geotiff, plan_traversal
 
 def create_file_upload():
     # FileInput widget
@@ -97,6 +97,36 @@ def create_data_col(image_figure, marker_source):
     save_button.js_on_click(file_download) # Attach the JS callback to the button
 
 
+    # Traveling salesman solver
+    # ======================================
+    def update_marker_source_with_path(marker_source):
+        """
+        Update marker_source with the traversal path.
+
+        Parameters:
+            marker_source: ColumnDataSource
+                The source containing x, y, and label of points.
+        """
+        # Get the optimal path
+        traversal_order = plan_traversal(marker_source)
+
+        # Reorder data based on traversal path
+        data = marker_source.data
+        new_data = {
+            "x": [data["x"][i] for i in traversal_order],
+            "y": [data["y"][i] for i in traversal_order],
+            "label": [data["label"][i] for i in traversal_order],
+        }
+
+        # Update the ColumnDataSource
+        marker_source.data = new_data
+
+    # Attach callback to button
+    def on_plan_click():
+        update_marker_source_with_path(marker_source)
+
+    plan_button = Button(label="Plan Shortest Traversal", button_type="primary")
+    plan_button.on_click(on_plan_click)
 
     # DataTable to display clicked waypoints
     # ======================================
@@ -125,7 +155,7 @@ def create_data_col(image_figure, marker_source):
     # image_container = column(image_figure)
     # image_container.sizing_mode = "stretch_both"
 
-    data_col = column(coords_display, save_button, data_table)
+    data_col = column(coords_display, save_button, plan_button, data_table)
     data_col.width = 400
     data_col.min_width = 400
     data_col.sizing_mode = "scale_height"

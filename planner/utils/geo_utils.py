@@ -3,7 +3,8 @@ from rasterio.io import MemoryFile
 from matplotlib import cm
 import os
 import base64
-
+from scipy.spatial.distance import cdist
+from scipy.optimize import linear_sum_assignment
 
 def process_geotiff(file_contents, logger):
     """Load and preprocess GeoTIFF."""
@@ -85,10 +86,47 @@ def extract_image_data(src):
 
 
 def plan_traversal(marker_source):
+    """
+    Plan the shortest traversal path for the given markers.
+    Uses a heuristic for the Traveling Salesman Problem (TSP).
 
+    Parameters:
+        marker_source: ColumnDataSource
+            The source containing x, y, and label of points.
 
-    return
+    Returns:
+        List of indices representing the traversal order.
+    """
+    data = marker_source.data
+    x_coords = data["x"]
+    y_coords = data["y"]
 
+    # Ensure we have points to process
+    if len(x_coords) < 2:
+        return list(range(len(x_coords)))  # No need for traversal if < 2 points
+
+    # Combine x and y into coordinates
+    points = np.array(list(zip(x_coords, y_coords)))
+
+    # Compute pairwise distances
+    distance_matrix = cdist(points, points, metric="euclidean")
+
+    # Use a heuristic method to solve TSP (nearest neighbor)
+    num_points = len(points)
+    unvisited = set(range(num_points))
+    path = []
+    current = 0  # Start at the first point
+    path.append(current)
+    unvisited.remove(current)
+
+    while unvisited:
+        # Find the nearest neighbor
+        nearest = min(unvisited, key=lambda point: distance_matrix[current, point])
+        path.append(nearest)
+        unvisited.remove(nearest)
+        current = nearest
+
+    return path
 
 def calculate_index(index_name, bands, alpha, colormap="RdYlGn"):
     """Calculate vegetation index and return a normalized RGBA image."""
