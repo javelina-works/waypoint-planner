@@ -1,11 +1,12 @@
 from bokeh.plotting import figure
+from bokeh.models import Range1d
 
 def create_image_figure(bounds, image_source):
     """Create the Bokeh figure for displaying the image."""
     p = figure(
         title="Interactive GeoTIFF Viewer",
-        x_range=(bounds.left, bounds.right),
-        y_range=(bounds.bottom, bounds.top),
+        x_range=Range1d(bounds.left, bounds.right),
+        y_range=Range1d(bounds.bottom, bounds.top),
         match_aspect=True,
         active_scroll="wheel_zoom",
         tools="pan,wheel_zoom,reset",  # Enable panning and zooming
@@ -21,6 +22,6 @@ def create_image_figure(bounds, image_source):
         dw=bounds.right - bounds.left,
         dh=bounds.top - bounds.bottom,
     )
-    p.output_backend = "webgl"
+    p.output_backend = "webgl" # In theory helps us with performance
     return p
 
