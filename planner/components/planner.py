@@ -25,7 +25,7 @@ def create_file_upload():
     return file_input
 
 
-def create_data_col(image_figure):
+def create_data_col(image_figure, marker_source):
 
     crosshair = CrosshairTool()
     image_figure.add_tools(crosshair)
@@ -45,9 +45,8 @@ def create_data_col(image_figure):
     image_figure.js_on_event("mousemove", callback)
 
 
-    # Create a data source for draggable markers
+    # Create draggable markers
     # ==================================================
-    marker_source = ColumnDataSource(data={"x": [], "y": [], "label": []})
     points = image_figure.scatter(x="x", y="y", size=10, color="red", source=marker_source) # Add circle markers to the plot
     image_figure.line(x="x", y="y", source=marker_source, line_width=2, color="green")  # Line connecting points
     image_figure.text(x="x", y="y", text="label", source=marker_source, text_font_size="10pt", text_baseline="middle", color="yellow")
@@ -59,36 +58,6 @@ def create_data_col(image_figure):
 
     # Button to save mission data to file
     # =====================================
-    
-    # Callback to save data to file
-    def save_to_file():
-        """Save the current DataTable values to a waypoints file."""
-        data = marker_source.data  # Get the data from the source
-
-        waypoints_filename = 'gen2.waypoints'
-        with open(waypoints_filename, 'w') as f:
-            # Write header for the MAVLink file (QGroundControl WPL version)
-            f.write("QGC WPL 110\n")  # Write header
-            
-            # Check if there's any data to write
-            num_points = len(data["x"])  # Number of rows
-            if num_points == 0:
-                print("No points to save!")
-                return
-
-            # Add home point (index 0)
-            # Home point command = 3, current WP = 1
-            f.write(f"0\t1\t0\t3\t0\t0\t0\t0\t{data['y'][0]}\t{data['x'][0]}\t100.000000\t1\n")
-
-            # Add waypoints starting from index 1 (regular waypoints)
-            for index in range(1, num_points):
-                # Waypoint command = 16
-                f.write(f"{index}\t0\t0\t16\t0\t0\t0\t0\t{data['y'][index]}\t{data['x'][index]}\t100.000000\t1\n")
-
-        print(f"Waypoints have been exported to {waypoints_filename}")
-
-    save_button = Button(label="Save to File", button_type="success")
-
     js_save_file = """
     const data = source.data;
     let fileContent = "QGC WPL 110\\n";  // Header for the MAVLink file

@@ -19,11 +19,11 @@ logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
 
 # Initialize Data Sources
 image_source = ColumnDataSource(data={"image": []})
+marker_source = ColumnDataSource(data={"x": [], "y": [], "label": []})
 
 # Placeholder for bounds as a SimpleNamespace
 default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
 
-# global bounds, rgba_image
 
 
 # Initialize Global Variables
@@ -54,14 +54,9 @@ def upload_callback(attr, old, new):
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
         rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
-        compressed_image = gzip.compress(rgba_image.tobytes())
-
-        with cProfile.Profile() as pr:
-            image_source.data = {"image": [rgba_image]}
-        pr.dump_stats('update_source.prof')
+        image_source.data = {"image": [rgba_image]}
 
         # image_figure = create_image_figure(bounds, image_source)
-
         # Add a new renderer with the updated image
         image_figure.image_rgba(
             image="image",
@@ -74,26 +69,23 @@ def upload_callback(attr, old, new):
 
         image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
         image_figure.y_range = Range1d(bounds.bottom, bounds.top)
-        # image_figure.height = new_image.
-        # image_figure.height = bounds.top - bounds.bottom
-        # image_figure.width = bounds.right - bounds.left
 
-        # current_file = new_image
         logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
         logger.debug(f"x_range=({image_figure.x_range.start}, {image_figure.x_range.end}), y_range=({image_figure.y_range.start}, {image_figure.y_range.end})")
 
     except Exception as e:
         logger.error(f"Error during file upload: {e}", exc_info=True)
 
-# Goes with file_input object
+
+# Bokeh application layout
+#==========================
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
 file_upload.on_change("value", upload_callback)
 
 image_container = column(file_upload, image_figure)
 image_container.sizing_mode = "stretch_both"
 
-data_col = create_data_col(image_figure)
-
+data_col = create_data_col(image_figure, marker_source)
 
 # Layout the widgets and figures
 planner_row = row(image_container, data_col)

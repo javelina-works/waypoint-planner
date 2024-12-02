@@ -1,6 +1,5 @@
 import numpy as np
 from rasterio.io import MemoryFile
-from rasterio.plot import reshape_as_image
 from matplotlib import cm
 import os
 import base64
@@ -40,14 +39,6 @@ def process_geotiff(file_contents, logger):
 
     logger.debug("Success processing image")
     return image, bounds
-
-def inspect_index(index):
-    print("Index count:", np.size(index))
-    print("Index min:", np.nanmin(index))
-    print("Index max:", np.nanmax(index))
-    print("Index mean:", np.nanmean(index))
-    print("Index median:", np.nanmedian(index))
-    print("Index std:", np.nanstd(index))
 
 def extract_image_data(src):
     """
@@ -91,6 +82,12 @@ def extract_image_data(src):
         rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
 
         return rgba_image, bounds
+
+
+def plan_traversal(marker_source):
+
+
+    return
 
 
 def calculate_index(index_name, bands, alpha, colormap="RdYlGn"):
