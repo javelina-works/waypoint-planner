@@ -87,14 +87,12 @@ def create_data_col(image_figure):
 
         print(f"Waypoints have been exported to {waypoints_filename}")
 
-    # save_button.on_click(save_to_file)
+    save_button = Button(label="Save to File", button_type="success")
 
     js_save_file = """
     const data = source.data;
     let fileContent = "QGC WPL 110\\n";  // Header for the MAVLink file
-
-    // Number of rows
-    const numPoints = data['x'].length;
+    const numPoints = data['x'].length; // Number of rows
 
     if (numPoints === 0) {
         alert("No points to save!");
@@ -116,21 +114,18 @@ def create_data_col(image_figure):
     // Create a temporary anchor element for download
     const a = document.createElement("a");
     a.href = url;
-    a.download = "gen2.waypoints";
+    a.download = "planned.waypoints";
     a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-
-    // Cleanup
-    document.body.removeChild(a);
+    document.body.removeChild(a); // Cleanup
     URL.revokeObjectURL(url);
     """
 
     # Create a Bokeh Button
     save_button = Button(label="Save to File", button_type="success")
-
-    # Attach the JS callback to the button
-    save_button.js_on_click(CustomJS(args=dict(source=marker_source), code=js_save_file))
+    file_download = CustomJS(args=dict(source=marker_source), code=js_save_file)
+    save_button.js_on_click(file_download) # Attach the JS callback to the button
 
 
 
