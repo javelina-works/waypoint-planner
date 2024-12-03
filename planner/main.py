@@ -30,7 +30,7 @@ tiff_file = "input/MADRID_RGB.tif"
 # Process initial data
 logger.info("Processing initial GeoTIFF file.")
 rgba_image, bounds = process_geotiff(tiff_file, logger)
-image_source.data = {"image": [rgba_image]}
+image_source.data = {"image": [rgba_image], "bounds": [bounds]}
 
 # Create figures
 image_figure = create_image_figure(bounds, image_source)
@@ -50,9 +50,18 @@ def upload_callback(attr, old, new):
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
         rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
-        image_source.data = {"image": [rgba_image]}
+        image_source.data = {"image": [rgba_image], "bounds": [bounds]}
 
-        # image_figure = create_image_figure(bounds, image_source)
+        logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
+
+    except Exception as e:
+        logger.error(f"Error during file upload: {e}", exc_info=True)
+
+# Callback for file upload
+def update_figure(attr, old, new):
+    try:
+        bounds = image_source.data["bounds"][0]
+
         # Add a new renderer with the updated image
         image_figure.image_rgba(
             image="image",
@@ -63,20 +72,23 @@ def upload_callback(attr, old, new):
             dh=bounds.top - bounds.bottom,
         )
 
-        image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
-        image_figure.y_range = Range1d(bounds.bottom, bounds.top)
+        image_figure.update(
+            x_range = Range1d(bounds.left, bounds.right),
+            y_range = Range1d(bounds.bottom, bounds.top)
+        )
+        # image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
+        # image_figure.y_range = Range1d(bounds.bottom, bounds.top)
 
-        logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
+        logger.debug("Updated image figure")
         logger.debug(f"x_range=({image_figure.x_range.start}, {image_figure.x_range.end}), y_range=({image_figure.y_range.start}, {image_figure.y_range.end})")
 
     except Exception as e:
         logger.error(f"Error during file upload: {e}", exc_info=True)
 
-
 # Bokeh application layout
 #==========================
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
-file_upload.on_change("value", upload_callback)
+file_upload.on_change("value", upload_callback, update_figure)
 
 image_container = column(file_upload, image_figure)
 image_container.sizing_mode = "stretch_both"

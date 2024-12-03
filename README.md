@@ -33,7 +33,7 @@ Designed neither for efficiency nor scalability, this app is a prototype for qui
 
 3. Run the app:
     ```bash
-    bokeh serve planner --show
+    bokeh serve planner --show --websocket-max-message-size=250000000
     ```
 
 4. Open the app in your browser at http://localhost:5006/planner.

@@ -34,7 +34,8 @@ def process_geotiff(file_contents, logger):
                 logger.debug(f"Band Data Type: {src.dtypes[0]}")  # e.g., 'uint8', 'uint16', 'float32'
                 logger.debug(f"Value Range: Min={src.read(1).min()}, Max={src.read(1).max()}")
                 logger.debug(f"The image has {src.count} bands.")
-                image, bounds = extract_image_data(src)
+                image = extract_image_data(src)
+                bounds = src.bounds # Geographic bounds in WGS84
     except Exception as e:
         logger.error(f"Error during file processing: {e}", exc_info=True)
 
@@ -46,7 +47,7 @@ def extract_image_data(src):
     Extract RGBA image and bounds from GeoTIFF.
     """
     num_bands = src.count
-    bounds = src.bounds # Geographic bounds in WGS84
+    # bounds = src.bounds # Geographic bounds in WGS84
 
     # Expecting [0,255] RGBA image (4 bands)
     if src.dtypes[0] == 'uint8' and num_bands == 4:
@@ -54,7 +55,7 @@ def extract_image_data(src):
         image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
-        return rgba_image, bounds
+        return rgba_image
 
     # [0,255], but only 3 bands this time
     elif src.dtypes[0] == 'uint8' and num_bands == 3:
@@ -64,7 +65,7 @@ def extract_image_data(src):
         image = np.dstack((r, g, b, alpha)) # Add in our artifical alpha channel
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
-        return rgba_image, bounds
+        return rgba_image
 
     else:
         r,g,b = src.read([1, 2, 3]).astype(np.float32)  # R, G, B
@@ -82,7 +83,7 @@ def extract_image_data(src):
         image = np.dstack((r_norm, g_norm, b_norm, alpha))
         rgba_image = np.flipud((image * 255).astype(np.uint8).view(dtype=np.uint32).reshape(image.shape[:2])) 
 
-        return rgba_image, bounds
+        return rgba_image
 
 
 def plan_traversal(marker_source):
