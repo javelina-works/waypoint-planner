@@ -1,18 +1,16 @@
-from bokeh.plotting import figure, curdoc
+from bokeh.plotting import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, FileInput, Range1d
-from bokeh.server import server
+from bokeh.models import FileInput, Range1d
 from types import SimpleNamespace
 
 from utils.geo_utils import process_geotiff
 from utils.logging_utils import setup_logger
 import logging
 from components.planner import create_data_col
+# import cProfile
 
 
-import cProfile
-
-
+IMAGE_DOWNSAMPLE = 3.0 # Ratio by which size reduced 
 
 SERVER_CONTEXT = curdoc().session_context.server_context
 
@@ -46,7 +44,6 @@ def upload_callback(attr, old, new):
             "bounds": [(0, bounds)]     # Update the bounds
         })
 
-
         logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
 
     except Exception as e:
@@ -56,6 +53,12 @@ def upload_callback(attr, old, new):
 def update_figure(attr, old, new):
     try:
         bounds = image_source.data["bounds"][0]
+        image_figure = getattr(SERVER_CONTEXT, 'image_figure')
+
+        # Get rid of possible previous image
+        image_figure.renderers = [
+            r for r in image_figure.renderers if not isinstance(r, type(image_figure.image_rgba))
+        ]
 
         # Add a new renderer with the updated image
         image_figure.image_rgba(
@@ -73,6 +76,9 @@ def update_figure(attr, old, new):
         )
         # image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
         # image_figure.y_range = Range1d(bounds.bottom, bounds.top)
+        
+        # Make sure points on top of map image
+        image_figure.renderers = image_figure.renderers[-1:] + image_figure.renderers[:-1]
 
         logger.debug("Updated image figure")
         logger.debug(f"x_range=({image_figure.x_range.start}, {image_figure.x_range.end}), y_range=({image_figure.y_range.start}, {image_figure.y_range.end})")

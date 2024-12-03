@@ -11,12 +11,11 @@ tiff_file = "input/MADRID_RGB.tif"
 
 def on_server_loaded(server_context):
     """Function to run once when the server starts."""
-    
+
     logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
     logger.info("Bokeh server has started!")
     initialize_data(server_context, logger)
     logger.info("Server startup completed.")
-
 
 
 def initialize_data(server_context, logger):

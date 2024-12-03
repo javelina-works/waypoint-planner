@@ -1,5 +1,6 @@
 import numpy as np
 from rasterio.io import MemoryFile
+from rasterio.enums import Resampling
 from matplotlib import cm
 import os
 import base64
@@ -28,13 +29,17 @@ def process_geotiff(file_contents, logger):
         logger.debug("Uploaded file without Base64 header.")
         decoded = base64.b64decode(file_contents)
 
+    # Now we have the image data in the correct format.
+    # Let's open and process it here
     try:
         with MemoryFile(decoded) as memfile:
             with memfile.open() as src:
                 logger.debug(f"Band Data Type: {src.dtypes[0]}")  # e.g., 'uint8', 'uint16', 'float32'
                 logger.debug(f"Value Range: Min={src.read(1).min()}, Max={src.read(1).max()}")
                 logger.debug(f"The image has {src.count} bands.")
-                image = extract_image_data(src)
+                
+                
+                image = extract_image_data(src, 5)
                 bounds = src.bounds # Geographic bounds in WGS84
     except Exception as e:
         logger.error(f"Error during file processing: {e}", exc_info=True)
@@ -42,16 +47,23 @@ def process_geotiff(file_contents, logger):
     logger.debug("Success processing image")
     return image, bounds
 
-def extract_image_data(src):
+
+def extract_image_data(src, downsample_factor=1):
     """
-    Extract RGBA image and bounds from GeoTIFF.
+    Extract RGBA image and bounds from GeoTIFF with optional downsampling.
     """
     num_bands = src.count
+    height = src.height // downsample_factor
+    width = src.width // downsample_factor
     # bounds = src.bounds # Geographic bounds in WGS84
 
     # Expecting [0,255] RGBA image (4 bands)
     if src.dtypes[0] == 'uint8' and num_bands == 4:
-        bands = src.read([1, 2, 3, 4]).astype(np.uint8)  # R, G, B, A (shape: 4 x height x width)
+        bands = src.read(
+            [1, 2, 3, 4],
+            out_shape=(num_bands, height, width),
+            resampling=Resampling.bilinear
+        ).astype(np.uint8)  # R, G, B, A (shape: 4 x height x width)
         image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
