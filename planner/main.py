@@ -1,39 +1,29 @@
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, FileInput, Range1d
+from bokeh.server import server
 from types import SimpleNamespace
 
-import logging
-from utils.logging_utils import setup_logger
 from utils.geo_utils import process_geotiff
+from utils.logging_utils import setup_logger
+import logging
 from components.planner import create_data_col
-from components.map import create_image_figure
+
 
 import cProfile
 
-global image_figure
 
-# Initialize logger
+
+SERVER_CONTEXT = curdoc().session_context.server_context
+
 logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
+image_source = getattr(SERVER_CONTEXT, 'image_source')
+marker_source = getattr(SERVER_CONTEXT, 'marker_source')
+image_figure = getattr(SERVER_CONTEXT, 'image_figure')
 
-# Initialize Data Sources
-image_source = ColumnDataSource(data={"image": []})
-marker_source = ColumnDataSource(data={"x": [], "y": [], "label": []})
 
 # Placeholder for bounds as a SimpleNamespace
 default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
-
-
-tiff_file = "input/MADRID_RGB.tif"
-# tiff_file = "input/ESPG-4326-orthophoto.tif"
-
-# Process initial data
-logger.info("Processing initial GeoTIFF file.")
-rgba_image, bounds = process_geotiff(tiff_file, logger)
-image_source.data = {"image": [rgba_image], "bounds": [bounds]}
-
-# Create figures
-image_figure = create_image_figure(bounds, image_source)
 
 
 # Callback for file upload
@@ -50,7 +40,12 @@ def upload_callback(attr, old, new):
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
         rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
-        image_source.data = {"image": [rgba_image], "bounds": [bounds]}
+        # image_source.data = {"image": [rgba_image], "bounds": [bounds]}
+        image_source.patch({
+            "image": [(0, rgba_image)],  # Update the first (and only) image
+            "bounds": [(0, bounds)]     # Update the bounds
+        })
+
 
         logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
 

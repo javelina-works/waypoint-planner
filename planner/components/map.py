@@ -1,8 +1,11 @@
 from bokeh.plotting import figure
 from bokeh.models import Range1d
 
-def create_image_figure(bounds, image_source):
+def create_image_figure(image_source):
     """Create the Bokeh figure for displaying the image."""
+
+    bounds = image_source.data["bounds"][0]
+
     p = figure(
         title="Interactive GeoTIFF Viewer",
         x_range=Range1d(bounds.left, bounds.right),
