@@ -36,3 +36,7 @@ def initialize_data(server_context, logger):
 
     logger.info("Data initialized.")
 
+
+def on_session_created(session_context):
+    # If present, this function executes when the server creates a session.
+    pass
