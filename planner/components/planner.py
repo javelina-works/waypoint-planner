@@ -25,10 +25,23 @@ def create_file_upload():
     return file_input
 
 
-def create_data_col(image_figure, marker_source):
-
+async def add_image_tools(image_figure, marker_source):
     crosshair = CrosshairTool()
     image_figure.add_tools(crosshair)
+
+    # Create draggable markers
+    # ==================================================
+    points = image_figure.scatter(x="x", y="y", size=10, color="red", source=marker_source) # Add circle markers to the plot
+    image_figure.line(x="x", y="y", source=marker_source, line_width=2, color="green")  # Line connecting points
+    image_figure.text(x="x", y="y", text="label", source=marker_source, text_font_size="10pt", text_baseline="middle", color="yellow")
+
+    draw_tool = PointDrawTool(renderers=[points], empty_value="1")
+    image_figure.add_tools(draw_tool)
+    image_figure.toolbar.active_tap = draw_tool  # Set PointDrawTool as the active tool
+
+
+
+def create_data_col(image_figure, marker_source):
 
     # Div to display the coordinates
     # ==============================
@@ -43,18 +56,6 @@ def create_data_col(image_figure, marker_source):
 
     # Attach the CustomJS to the plot's mouse move event
     image_figure.js_on_event("mousemove", callback)
-
-
-    # Create draggable markers
-    # ==================================================
-    points = image_figure.scatter(x="x", y="y", size=10, color="red", source=marker_source) # Add circle markers to the plot
-    image_figure.line(x="x", y="y", source=marker_source, line_width=2, color="green")  # Line connecting points
-    image_figure.text(x="x", y="y", text="label", source=marker_source, text_font_size="10pt", text_baseline="middle", color="yellow")
-
-    draw_tool = PointDrawTool(renderers=[points], empty_value="1")
-    image_figure.add_tools(draw_tool)
-    image_figure.toolbar.active_tap = draw_tool  # Set PointDrawTool as the active tool
-
 
     # Button to save mission data to file
     # =====================================
