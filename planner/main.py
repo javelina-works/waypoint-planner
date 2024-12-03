@@ -9,6 +9,10 @@ import logging
 from components.planner import create_data_col
 # import cProfile
 
+from tornado.ioloop import IOLoop
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
+from functools import partial
 
 IMAGE_DOWNSAMPLE = 5 # Ratio by which size reduced 
 
@@ -23,6 +27,57 @@ image_figure = getattr(SERVER_CONTEXT, 'image_figure')
 # Placeholder for bounds as a SimpleNamespace
 default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
 
+# Create a thread pool for processing
+executor = ThreadPoolExecutor(max_workers=2)
+
+# Async helper function to process the GeoTIFF
+async def async_process_geotiff(file_contents, logger, downsample_factor):
+    """
+    Process the GeoTIFF file asynchronously in a thread pool.
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        executor,
+        lambda: process_geotiff(file_contents, logger, downsample_factor)
+    )
+
+async def process_and_update(file_contents):
+    
+    rgba_image, bounds = process_geotiff(file_contents, logger, downsample_factor=IMAGE_DOWNSAMPLE)
+    image_source.data = {"image": [rgba_image], "bounds": [bounds]}
+    logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
+
+    bounds = image_source.data["bounds"][0]
+    # image_figure = getattr(SERVER_CONTEXT, 'image_figure')
+
+    # Get rid of possible previous image
+    image_figure.renderers = [
+        r for r in image_figure.renderers if not isinstance(r, type(image_figure.image_rgba))
+    ]
+
+    # Add a new renderer with the updated image
+    image_figure.image_rgba(
+        image="image",
+        source=image_source,
+        x=bounds.left,
+        y=bounds.bottom,
+        dw=bounds.right - bounds.left,
+        dh=bounds.top - bounds.bottom,
+    )
+
+    image_figure.update(
+        x_range = Range1d(bounds.left, bounds.right),
+        y_range = Range1d(bounds.bottom, bounds.top)
+    )
+    # image_figure.x_range = Range1d(bounds.left, bounds.right) # Update the figure bounds
+    # image_figure.y_range = Range1d(bounds.bottom, bounds.top)
+    
+    # Make sure points on top of map image
+    image_figure.renderers = image_figure.renderers[-1:] + image_figure.renderers[:-1]
+
+    logger.debug("Updated image figure")
+    logger.debug(f"x_range=({image_figure.x_range.start}, {image_figure.x_range.end}), y_range=({image_figure.y_range.start}, {image_figure.y_range.end})")
+
 
 # Callback for file upload
 def upload_callback(attr, old, new):
@@ -34,17 +89,10 @@ def upload_callback(attr, old, new):
         if not file_contents:
             logger.warning("No file contents uploaded!")
             return
-        
-        logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
+        logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")            
 
-        rgba_image, bounds = process_geotiff(file_contents, logger, downsample_factor=IMAGE_DOWNSAMPLE)  # Remove header and decode
-        image_source.data = {"image": [rgba_image], "bounds": [bounds]}
-        # image_source.patch({
-        #     "image": [(0, rgba_image)],  # Update the first (and only) image
-        #     "bounds": [(0, bounds)]     # Update the bounds
-        # })
-
-        logger.debug(f"Updated figure bounds to: x_range=({bounds.left}, {bounds.right}), y_range=({bounds.bottom}, {bounds.top})")
+        curdoc().add_next_tick_callback(partial(process_and_update, file_contents=file_contents))
+        logger.debug("Image processing completed")
 
     except Exception as e:
         logger.error(f"Error during file upload: {e}", exc_info=True)
@@ -53,7 +101,7 @@ def upload_callback(attr, old, new):
 def update_figure(attr, old, new):
     try:
         bounds = image_source.data["bounds"][0]
-        image_figure = getattr(SERVER_CONTEXT, 'image_figure')
+        # image_figure = getattr(SERVER_CONTEXT, 'image_figure')
 
         # Get rid of possible previous image
         image_figure.renderers = [
@@ -86,10 +134,11 @@ def update_figure(attr, old, new):
     except Exception as e:
         logger.error(f"Error during file upload: {e}", exc_info=True)
 
+
 # Bokeh application layout
 #==========================
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
-file_upload.on_change("value", upload_callback, update_figure)
+file_upload.on_change("value", upload_callback)
 
 image_container = column(file_upload, image_figure)
 image_container.sizing_mode = "stretch_both"
