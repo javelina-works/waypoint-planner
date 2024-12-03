@@ -74,13 +74,14 @@ def upload_callback(attr, old, new):
         if not file_contents:
             logger.warning("No file contents uploaded!")
             return
-
+          
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")            
         curdoc().add_next_tick_callback(partial(process_and_update, file_contents=file_contents))
         logger.debug("Image processing completed")
 
     except Exception as e:
         logger.error(f"Error during file upload: {e}", exc_info=True)
+
 
 # Bokeh application layout
 #==========================
