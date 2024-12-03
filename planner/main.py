@@ -10,7 +10,7 @@ from components.planner import create_data_col
 # import cProfile
 
 
-IMAGE_DOWNSAMPLE = 3.0 # Ratio by which size reduced 
+IMAGE_DOWNSAMPLE = 5 # Ratio by which size reduced 
 
 SERVER_CONTEXT = curdoc().session_context.server_context
 
@@ -37,7 +37,7 @@ def upload_callback(attr, old, new):
         
         logger.debug(f"Uploaded file size: {len(file_contents) / (1024 * 1024):.2f} MB")
 
-        rgba_image, bounds = process_geotiff(file_contents, logger)  # Remove header and decode
+        rgba_image, bounds = process_geotiff(file_contents, logger, downsample_factor=IMAGE_DOWNSAMPLE)  # Remove header and decode
         # image_source.data = {"image": [rgba_image], "bounds": [bounds]}
         image_source.patch({
             "image": [(0, rgba_image)],  # Update the first (and only) image

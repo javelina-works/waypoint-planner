@@ -7,7 +7,7 @@ import base64
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 
-def process_geotiff(file_contents, logger):
+def process_geotiff(file_contents, logger, downsample_factor=1):
     """Load and preprocess GeoTIFF."""
     # global r_norm, g_norm, b_norm, non_transparent_mask, rgba_image, alpha, bounds
 
@@ -38,8 +38,7 @@ def process_geotiff(file_contents, logger):
                 logger.debug(f"Value Range: Min={src.read(1).min()}, Max={src.read(1).max()}")
                 logger.debug(f"The image has {src.count} bands.")
                 
-                
-                image = extract_image_data(src, 5)
+                image = extract_image_data(src, downsample_factor)
                 bounds = src.bounds # Geographic bounds in WGS84
     except Exception as e:
         logger.error(f"Error during file processing: {e}", exc_info=True)
@@ -64,6 +63,7 @@ def extract_image_data(src, downsample_factor=1):
             out_shape=(num_bands, height, width),
             resampling=Resampling.bilinear
         ).astype(np.uint8)  # R, G, B, A (shape: 4 x height x width)
+
         image = np.ascontiguousarray(np.transpose(bands, (1, 2, 0))) # Put first dim to end
         rgba_image = np.flipud(image.view(dtype=np.uint32).reshape(image.shape[:2])) # Bokeh image format
   
@@ -71,7 +71,11 @@ def extract_image_data(src, downsample_factor=1):
 
     # [0,255], but only 3 bands this time
     elif src.dtypes[0] == 'uint8' and num_bands == 3:
-        r,g,b = src.read([1, 2, 3]).astype(np.uint8)  # R, G, B
+        r,g,b = src.read(
+            [1, 2, 3],
+            out_shape=(num_bands, height, width),
+            resampling=Resampling.bilinear
+        ).astype(np.uint8)  # R, G, B
 
         alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 255).astype(np.uint8)  # Fully opaque except where RGB is all 0
         image = np.dstack((r, g, b, alpha)) # Add in our artifical alpha channel
@@ -80,14 +84,22 @@ def extract_image_data(src, downsample_factor=1):
         return rgba_image
 
     else:
-        r,g,b = src.read([1, 2, 3]).astype(np.float32)  # R, G, B
+        r,g,b = src.read(
+            [1, 2, 3],
+            out_shape=(num_bands, height, width),
+            resampling=Resampling.bilinear
+        ).astype(np.float32)  # R, G, B
         
         r_norm = (r - np.min(r)) / (np.max(r) - np.min(r))
         g_norm = (g - np.min(g)) / (np.max(g) - np.min(g))
         b_norm = (b - np.min(b)) / (np.max(b) - np.min(b))
 
         if num_bands == 4:
-            a = src.read(4).astype(np.float32) # Read the alpha channel if it exists
+            a = src.read(
+                4,
+                out_shape=(num_bands, height, width),
+                resampling=Resampling.bilinear
+            ).astype(np.float32) # Read the alpha channel if it exists
             alpha = (a - np.min(a)) / (np.max(a) - np.min(a))
         else:
             alpha = np.where((r == 0) & (g == 0) & (b == 0), 0, 1).astype(float) # Create alpha channel
