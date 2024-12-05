@@ -88,15 +88,26 @@ def upload_callback(attr, old, new):
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
 file_upload.on_change("value", upload_callback)
 
-image_container = column(file_upload, image_figure)
-image_container.sizing_mode = "stretch_both"
+def create_document_layout():
 
-curdoc().add_next_tick_callback(partial(add_image_tools, image_figure=image_figure, marker_source=marker_source))
-data_col = create_data_col(image_figure, marker_source)
+    image_container = column(file_upload, image_figure)
+    image_container.sizing_mode = "stretch_both"
 
-# Layout the widgets and figures
-planner_row = row(image_container, data_col)
-planner_row.sizing_mode = "stretch_both"
+    curdoc().add_next_tick_callback(partial(add_image_tools, image_figure=image_figure, marker_source=marker_source))
 
-curdoc().add_root(planner_row)
-logger.info("Application started.")
+    def update_data_col():
+        data_col = create_data_col(image_figure, marker_source)
+        
+        # Layout the widgets and figures
+        planner_row = row(image_container, data_col)
+        planner_row.sizing_mode = "stretch_both"
+
+        curdoc().add_root(planner_row)
+
+    # data_col = create_data_col(image_figure, marker_source)
+    curdoc().add_next_tick_callback(update_data_col)
+
+    logger.info("Application started.")
+
+
+curdoc().add_next_tick_callback(create_document_layout)
