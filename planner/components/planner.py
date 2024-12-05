@@ -4,6 +4,7 @@ from bokeh.models import (
     ColumnDataSource, PointDrawTool, Button, Div,
     FileInput, 
 )
+from bokeh.document import without_document_lock
 
 from utils.geo_utils import process_geotiff, plan_traversal
 
@@ -25,7 +26,7 @@ def create_file_upload():
     return file_input
 
 
-async def add_image_tools(image_figure, marker_source):
+def add_image_tools(image_figure, marker_source):
     crosshair = CrosshairTool()
     image_figure.add_tools(crosshair)
 
@@ -40,7 +41,7 @@ async def add_image_tools(image_figure, marker_source):
     image_figure.toolbar.active_tap = draw_tool  # Set PointDrawTool as the active tool
 
 
-
+# @without_document_lock
 def create_data_col(image_figure, marker_source):
 
     # Div to display the coordinates
@@ -56,6 +57,7 @@ def create_data_col(image_figure, marker_source):
 
     # Attach the CustomJS to the plot's mouse move event
     image_figure.js_on_event("mousemove", callback)
+    
 
     # Button to save mission data to file
     # =====================================
