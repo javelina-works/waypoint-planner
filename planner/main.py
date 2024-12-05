@@ -10,6 +10,8 @@ from utils.geo_utils import process_geotiff
 from utils.logging_utils import setup_logger
 import logging
 from components.planner import create_data_col, add_image_tools
+from components.map import create_image_figure
+
 # import cProfile
 
 from tornado.ioloop import IOLoop
@@ -19,16 +21,24 @@ from functools import partial
 
 IMAGE_DOWNSAMPLE = 5 # Ratio by which size reduced 
 
+
 SERVER_CONTEXT = curdoc().session_context.server_context
+
+SESSION_CONTEXT = curdoc().session_context
 
 logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
 image_source = getattr(SERVER_CONTEXT, 'image_source')
 marker_source = getattr(SERVER_CONTEXT, 'marker_source')
-image_figure = getattr(SERVER_CONTEXT, 'image_figure')
+# image_figure = getattr(SERVER_CONTEXT, 'image_figure')
 
+logger.debug(f'main.py Session Context: {curdoc().session_context.id}')
+logger.debug(f"main.py curdoc(): {id(curdoc())}")
+
+planner_row = getattr(SESSION_CONTEXT, 'planner_row')
+curdoc().add_root(planner_row)
 
 # Placeholder for bounds as a SimpleNamespace
-default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
+# default_bounds = SimpleNamespace(left=0, right=1000, bottom=0, top=1000)
 
 async def process_and_update(file_contents):
     rgba_image, bounds = process_geotiff(file_contents, logger, downsample_factor=IMAGE_DOWNSAMPLE)
@@ -88,58 +98,23 @@ def upload_callback(attr, old, new):
 
 # Bokeh application layout
 #==========================
-file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
-file_upload.on_change("value", upload_callback)
+# image_figure = create_image_figure(image_source)
 
-image_container = column(file_upload, image_figure)
-image_container.sizing_mode = "stretch_both"
+# file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
+# # file_upload.on_change("value", upload_callback)
+
+# image_container = column(file_upload, image_figure)
+# image_container.sizing_mode = "stretch_both"
 
 # data_col = create_data_col(image_figure, marker_source)
 
-crosshair = CrosshairTool()
-image_figure.add_tools(crosshair)
 
-# Create draggable markers
-# ==================================================
-points = image_figure.scatter(x="x", y="y", size=10, color="red", source=marker_source) # Add circle markers to the plot
-image_figure.line(x="x", y="y", source=marker_source, line_width=2, color="green")  # Line connecting points
-image_figure.text(x="x", y="y", text="label", source=marker_source, text_font_size="10pt", text_baseline="middle", color="yellow")
+# # Layout the widgets and figures
+# # ==============================
+# planner_row = row(image_container, data_col)
+# planner_row.sizing_mode = "stretch_both"
+# curdoc().add_root(planner_row)
 
-draw_tool = PointDrawTool(renderers=[points], empty_value="1")
-image_figure.add_tools(draw_tool)
-image_figure.toolbar.active_tap = draw_tool  # Set PointDrawTool as the active tool
-
-# Div to display the coordinates
-# ==============================
-coords_display = Div(text="Mouse Coordinates: (x: --, y: --)", width=400, height=30)
-
-# CustomJS callback for updating coordinates
-callback = CustomJS(args=dict(coords=coords_display), code="""
-    const {x, y} = cb_obj; // Get the mouse event from cb_obj
-    // Update the Div text with the new coordinates
-    coords.text = `Mouse Coordinates: (x: ${x.toFixed(7)}, y: ${y.toFixed(7)})`;
-""")
-
-# Attach the CustomJS to the plot's mouse move event
-image_figure.js_on_event("mousemove", callback)
-
-# data_col = column(coords_display, save_button, plan_button, data_table)
-data_col = column(coords_display)
-data_col.width = 400
-data_col.min_width = 400
-data_col.sizing_mode = "scale_height"
-
-
-
-
-
-
-
-# Layout the widgets and figures
-# ==============================
-planner_row = row(image_container)
-planner_row.sizing_mode = "stretch_both"
-
-curdoc().add_root(planner_row)
+logger.debug(f"Main document (main.py): {curdoc()}")
 logger.info("   > Document built!")
 
