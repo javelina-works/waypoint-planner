@@ -56,7 +56,7 @@ Designed neither for efficiency nor scalability, this app is a prototype for qui
     OR to emulate the production environment:
 
     ```bash
-    docker run --cpus="2" --memory="512m" --memory-swap="512m" --cpu-quota=20000 -p 5006:5006 waypoint-planner 
+    docker run --cpus="2" --memory="512m" --memory-swap="512m" -p 5006:5006 waypoint-planner 
     ```
 
 ## Usage Instructions
