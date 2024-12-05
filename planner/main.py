@@ -1,6 +1,9 @@
 from bokeh.plotting import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import FileInput, Range1d
+from bokeh.models import (
+    FileInput, Range1d, CrosshairTool, PointDrawTool,
+    Div, CustomJS,
+)
 from types import SimpleNamespace
 
 from utils.geo_utils import process_geotiff
@@ -88,26 +91,55 @@ def upload_callback(attr, old, new):
 file_upload = FileInput(title="Select files:", accept=".tif,.tiff")
 file_upload.on_change("value", upload_callback)
 
-def create_document_layout():
+image_container = column(file_upload, image_figure)
+image_container.sizing_mode = "stretch_both"
 
-    image_container = column(file_upload, image_figure)
-    image_container.sizing_mode = "stretch_both"
+# data_col = create_data_col(image_figure, marker_source)
 
-    curdoc().add_next_tick_callback(partial(add_image_tools, image_figure=image_figure, marker_source=marker_source))
+crosshair = CrosshairTool()
+image_figure.add_tools(crosshair)
 
-    def update_data_col():
-        data_col = create_data_col(image_figure, marker_source)
-        
-        # Layout the widgets and figures
-        planner_row = row(image_container, data_col)
-        planner_row.sizing_mode = "stretch_both"
+# Create draggable markers
+# ==================================================
+points = image_figure.scatter(x="x", y="y", size=10, color="red", source=marker_source) # Add circle markers to the plot
+image_figure.line(x="x", y="y", source=marker_source, line_width=2, color="green")  # Line connecting points
+image_figure.text(x="x", y="y", text="label", source=marker_source, text_font_size="10pt", text_baseline="middle", color="yellow")
 
-        curdoc().add_root(planner_row)
+draw_tool = PointDrawTool(renderers=[points], empty_value="1")
+image_figure.add_tools(draw_tool)
+image_figure.toolbar.active_tap = draw_tool  # Set PointDrawTool as the active tool
 
-    # data_col = create_data_col(image_figure, marker_source)
-    curdoc().add_next_tick_callback(update_data_col)
+# Div to display the coordinates
+# ==============================
+coords_display = Div(text="Mouse Coordinates: (x: --, y: --)", width=400, height=30)
 
-    logger.info("Application started.")
+# CustomJS callback for updating coordinates
+callback = CustomJS(args=dict(coords=coords_display), code="""
+    const {x, y} = cb_obj; // Get the mouse event from cb_obj
+    // Update the Div text with the new coordinates
+    coords.text = `Mouse Coordinates: (x: ${x.toFixed(7)}, y: ${y.toFixed(7)})`;
+""")
+
+# Attach the CustomJS to the plot's mouse move event
+image_figure.js_on_event("mousemove", callback)
+
+# data_col = column(coords_display, save_button, plan_button, data_table)
+data_col = column(coords_display)
+data_col.width = 400
+data_col.min_width = 400
+data_col.sizing_mode = "scale_height"
 
 
-curdoc().add_next_tick_callback(create_document_layout)
+
+
+
+
+
+# Layout the widgets and figures
+# ==============================
+planner_row = row(image_container)
+planner_row.sizing_mode = "stretch_both"
+
+curdoc().add_root(planner_row)
+logger.info("   > Document built!")
+
