@@ -1,6 +1,8 @@
 from bokeh.plotting import figure
 from bokeh.models import Range1d
 
+
+
 def create_image_figure(image_source):
     """Create the Bokeh figure for displaying the image."""
 
@@ -29,4 +31,3 @@ def create_image_figure(image_source):
     )
     p.output_backend = "webgl" # In theory helps us with performance
     return p
-
