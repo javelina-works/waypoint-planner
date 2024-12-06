@@ -1,8 +1,7 @@
 from bokeh.layouts import column, row
 from bokeh.models import (
     CrosshairTool, TableColumn, DataTable, CustomJS,
-    ColumnDataSource, PointDrawTool, Button, Div,
-    FileInput, Range1d 
+    PointDrawTool, Button, Div, FileInput, Range1d, 
 )
 from bokeh.plotting import curdoc
 from functools import partial
@@ -78,7 +77,7 @@ def create_file_upload(image_source, image_figure, logger):
 
 
 def add_image_tools(image_figure, marker_source):
-    crosshair = CrosshairTool()
+    crosshair = CrosshairTool(line_alpha=0.7, line_color="aquamarine")
     image_figure.add_tools(crosshair)
 
     # Create draggable markers
@@ -95,11 +94,9 @@ def add_image_tools(image_figure, marker_source):
 # @without_document_lock
 def create_data_col(image_figure, marker_source):
 
-    # Div to display the coordinates
+    # Div to display mouse coordinates
     # ==============================
     coords_display = Div(text="Mouse Coordinates: (x: --, y: --)", width=400, height=30)
-
-    # CustomJS callback for updating coordinates
     callback = CustomJS(args=dict(coords=coords_display), code="""
         const {x, y} = cb_obj; // Get the mouse event from cb_obj
         // Update the Div text with the new coordinates
@@ -146,7 +143,7 @@ def create_data_col(image_figure, marker_source):
     """
 
     # Create a Bokeh Button
-    save_button = Button(label="Save to File", button_type="success")
+    save_button = Button(label="Save Plan to File", button_type="success")
     file_download = CustomJS(args=dict(source=marker_source), code=js_save_file)
     save_button.js_on_click(file_download) # Attach the JS callback to the button
 
@@ -182,6 +179,29 @@ def create_data_col(image_figure, marker_source):
     plan_button = Button(label="Plan Shortest Traversal", button_type="primary")
     plan_button.on_click(on_plan_click)
 
+    # Callback to clear all waypoints
+    def clear_all_waypoints():
+        marker_source.data = {"x": [], "y": [], "label": []}
+
+    # Callback to delete the last waypoint
+    def delete_last_waypoint():
+        if len(marker_source.data["x"]) > 0:
+            marker_source.data = {
+                "x": marker_source.data["x"][:-1],
+                "y": marker_source.data["y"][:-1],
+                "label": marker_source.data["label"][:-1],
+            }
+
+
+    # Create the buttons
+    clear_button = Button(label="Clear All Waypoints", button_type="danger")
+    delete_button = Button(label="Delete Last Waypoint", button_type="warning")
+
+    # Link the buttons to their callbacks
+    clear_button.on_click(clear_all_waypoints)
+    delete_button.on_click(delete_last_waypoint)
+
+
     # DataTable to display clicked waypoints
     # ======================================
     columns = [
@@ -209,7 +229,10 @@ def create_data_col(image_figure, marker_source):
     # image_container = column(image_figure)
     # image_container.sizing_mode = "stretch_both"
 
-    data_col = column(coords_display, save_button, plan_button, data_table)
+    route_buttons = row(plan_button, save_button)
+    point_buttons = row(delete_button, clear_button)
+
+    data_col = column(coords_display, route_buttons, point_buttons, data_table)
     data_col.width = 400
     data_col.min_width = 400
     data_col.sizing_mode = "scale_height"
