@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from starlette.responses import Response
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.profiles import img_profiles
 import numpy as np
 from rasterio.enums import Resampling
@@ -21,9 +21,10 @@ def read_tile(
 ):
     # size corresponds to the tilesize parameter in cog.tile()
     try:
-        with COGReader(COG_PATH) as cog:
+        with Reader(COG_PATH) as cog:
             tile, mask = cog.tile(x, y, z, tilesize=size)
-    except Exception:
+    except Exception as e:
+        print("Error fetching tile:", e)  # Print the error for debugging
         # Out of bounds or another issue, return a blank tile or a 404
         blank_img = Image.new('RGBA', (256, 256), (0,0,0,0))
         buffer = BytesIO()
