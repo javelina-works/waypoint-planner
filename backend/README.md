@@ -1,7 +1,11 @@
 # Interactive App Backend
 
 ## TODOs
-- 
+- [ ] Add frontend service + container
+    - [ ] Folium frontend display
+    - [ ] Connect to custom tile server!
+- [ ] Add ability to upload files to service
+- [ ] Add tile server for uploaded image(s)
 
 
 ## Running the Server
@@ -17,10 +21,14 @@ backend/
 │   ├── main.py               # FastAPI entry point
 │   ├── routers/
 │   │   ├── waypoints.py      # API routes for waypoints
+│   │   ├── tiles.py          # API for tile generation
+│   │   ├── uploads.py        # API for image uploads
 │   ├── models/
 │   │   └── waypoint_model.py # SQLite database model
 │   ├── services/
 │   │   ├── waypoint_service.py # Business logic
+│   │   ├── tiling_service.py # Logic for creating tiles
+│   │   ├── upload_service.py # Logic for saving uploaded images
 │   ├── db.py                 # Database connection setup
 │   └── utils/
 │       └── geojson_utils.py  # Helper functions for GeoJSON
