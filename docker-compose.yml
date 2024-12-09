@@ -1,21 +1,27 @@
-version: '3.8'
+version: "3.8"
+
 services:
-  bokeh-app:
-    image: bokeh-app:v0.1
+  backend:
     build:
-      context: .
+      context: backend
+      dockerfile: Dockerfile
     ports:
-      - "5006" # Keep internal port mapping for debugging
+      - "8000:8000"
+    # depends_on:
+      # - db
     environment:
-      - BOKEH_ALLOW_WS_ORIGIN=*
-  
-  nginx:
-    image: nginx:latest
-    ports:
-      - "443:443"
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/ssl                        # Mount self-signed certificates
-    depends_on:
-      - bokeh-app
+      DATABASE_URL: "sqlite:///./waypoints.db"  # Update if using SQLite for now
+
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: waypoints_db
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   db_data:

@@ -1,7 +1,17 @@
 # Interactive App Backend
 
+## TODOs
+- 
+
+
+## Running the Server
+
+`uvicorn app.main:app --reload`
+
+
 ## Backend Setup
 
+```
 backend/
 ├── app/
 │   ├── main.py               # FastAPI entry point
@@ -18,6 +28,7 @@ backend/
 │   └── test_waypoints.py     # Unit tests
 ├── requirements.txt          # Dependencies
 └── README.md
+```
 
 ### Structure
 - **Models**: Define the structure of your database and the data your application works with.
@@ -34,6 +45,3 @@ backend/
 
 
 
-## Running the Server
-
-`uvicorn app.main:app --reload`
