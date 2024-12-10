@@ -133,11 +133,11 @@ const routes = [
         },
         redirect: '/buttons/standard-buttons',
         children: [
-          {
-            path: '/buttons/standard-buttons',
-            name: 'Buttons',
-            component: () => import('@/views/buttons/Buttons.vue'),
-          },
+          // {
+          //   path: '/buttons/standard-buttons',
+          //   name: 'Buttons',
+          //   component: () => import('@/views/buttons/Buttons.vue'),
+          // },
           {
             path: '/buttons/dropdowns',
             name: 'Dropdowns',
