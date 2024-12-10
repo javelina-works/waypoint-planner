@@ -12,6 +12,7 @@ export default {
     return {
       map: null,
       waypoints: [], // Array to store waypoints
+      polyline: null, // Leaflet polyline object
     };
   },
   mounted() {
@@ -24,6 +25,9 @@ export default {
       attribution: '© OpenStreetMap contributors',
     }).addTo(this.map);
 
+    // Initialize polyline
+    this.polyline = L.polyline([], { color: 'blue' }).addTo(this.map);
+
     // Add click event to add waypoints
     this.map.on('click', this.addWaypoint);
   },
@@ -35,16 +39,18 @@ export default {
       const marker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
 
       // Update waypoints array
-      this.waypoints.push({ lat, lng, marker });
+      const waypoint = { lat, lng, marker };
+      this.waypoints.push(waypoint);
+
+      // Update the polyline
+      this.updatePolyline();
 
       // Update position when marker is dragged
       marker.on('dragend', () => {
-        const { lat, lng } = marker.getLatLng();
-        const index = this.waypoints.findIndex(wp => wp.marker === marker);
-        if (index !== -1) {
-          this.waypoints[index].lat = lat;
-          this.waypoints[index].lng = lng;
-        }
+        const newLatLng = marker.getLatLng();
+        waypoint.lat = newLatLng.lat;
+        waypoint.lng = newLatLng.lng;
+        this.updatePolyline();
       });
     },
     removeWaypoint(index) {
@@ -53,6 +59,14 @@ export default {
 
       // Remove waypoint from array
       this.waypoints.splice(index, 1);
+
+      // Update the polyline
+      this.updatePolyline();
+    },
+    updatePolyline() {
+      // Extract the LatLng array from waypoints and update the polyline
+      const latlngs = this.waypoints.map(wp => [wp.lat, wp.lng]);
+      this.polyline.setLatLngs(latlngs);
     },
   },
 };
