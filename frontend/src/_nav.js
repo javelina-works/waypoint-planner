@@ -10,6 +10,12 @@ export default [
     },
   },
   {
+    component: 'CNavItem',
+    name: 'Planner',
+    to: '/planner',
+    icon: 'cil-cursor',
+  },
+  {
     component: 'CNavTitle',
     name: 'Theme',
   },

@@ -2,15 +2,20 @@
 from fastapi import APIRouter, File, UploadFile
 import shutil
 from pathlib import Path
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 UPLOAD_DIR = Path("./uploaded_images")
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload")
 async def upload_image(file: UploadFile = File(...)):
-    file_path = UPLOAD_DIR / file.filename
-    with open(file_path, "wb") as buffer:
+    logger.debug(f"File uploaded: {file.filename}")
+    filepath = UPLOAD_DIR / file.filename
+    with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    return {"filename": file.filename, "path": str(file_path)}
+    return {"filename": file.filename, "url": f"/tiles/{file.filename}"}
