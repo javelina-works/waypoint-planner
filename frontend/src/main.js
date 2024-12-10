@@ -11,6 +11,8 @@ import DocsComponents from '@/components/DocsComponents'
 import DocsExample from '@/components/DocsExample'
 import DocsIcons from '@/components/DocsIcons'
 
+import 'leaflet/dist/leaflet.css';
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
