@@ -25,10 +25,10 @@ app.add_middleware(
 # Register routers
 app.include_router(waypoints.router, prefix="/api/v1")
 app.include_router(uploads.router, prefix="/api/v1", tags=["uploads"])
-# app.include_router(tiles.router, prefix="/api/v1", tags=["tiles"])
-cog = TilerFactory(router_prefix="/api/v1")
-app.include_router(cog.router, prefix="/api/v1", tags=["tiles"])
-add_exception_handlers(app, DEFAULT_STATUS_CODES)
+app.include_router(tiles.router, prefix="/api/v1", tags=["tiles"])
+# cog = TilerFactory(router_prefix="/api/v1")
+# app.include_router(cog.router, prefix="/api/v1", tags=["tiles"])
+# add_exception_handlers(app, DEFAULT_STATUS_CODES)
 
 
 # Serve static files from the Vue build directory

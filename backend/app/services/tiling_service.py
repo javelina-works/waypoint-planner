@@ -28,8 +28,7 @@ def get_tile(
             image_blob = tile_image.render(img_format="PNG")
             buffer = BytesIO(image_blob)
             buffer.seek(0)
-            # tile_image.data()
-            return StreamingResponse(BytesIO(tile_image), media_type="image/png")
+            return StreamingResponse(buffer, media_type="image/png")
 
     except TileOutsideBounds as oob:
         # Out of bounds, return a blank tile or a 404

@@ -46,10 +46,10 @@
   
         const data = await response.json();
         console.log(data);
-        this.tileUrl = `http://localhost:8000${data.url}`;
+        this.tileUrl = `http://localhost:8000/api/v1${data.url}`;
   
         // Add the COG tile layer to the map
-        L.tileLayer(`${this.tileUrl}/api/v1/{z}/{x}/{y}.png`, {
+        L.tileLayer(`${this.tileUrl}/{z}/{x}/{y}.png`, {
           tileSize: 256,
           maxZoom: 19,
         }).addTo(this.map);
