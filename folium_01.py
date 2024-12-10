@@ -37,7 +37,8 @@ m = folium.Map(max_zoom=21)
 m = folium.Map(location=[40, -100], zoom_start=4)
 
 folium.TileLayer(
-    tiles='http://localhost:8000/api/v1/tiles/output_cog.tif/{z}/{x}/{y}.png',
+    # tiles='http://localhost:8000/api/v1/tiles/output_cog.tif/{z}/{x}/{y}.png',
+    tiles='http://localhost:8000/api/v1/tiles/{z}/{x}/{y}.png',
     attr='My COG Tiles',
     name='GeoTIFF COG Layer',
     overlay=True,
