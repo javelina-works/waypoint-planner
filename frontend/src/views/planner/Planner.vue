@@ -19,8 +19,10 @@
     },
     mounted() {
       // Initialize the map
-      this.map = L.map("map").setView([0, 0], 2);
-  
+      this.map = L.map("map", {
+        // crs: L.CRS.EPSG4326,
+      }).setView([0, 0], 2);
+
       // Add a tile layer placeholder
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -47,22 +49,26 @@
         const data = await response.json();
         console.log(data);
 
-        this.tileUrl = `http://localhost:8000/api/v1/WebMercatorQuad`;
+        this.tileUrl = `http://localhost:8000/api/v1/tiles/CDB1GlobalGrid`;
+        // this.tileUrl = `http://localhost:8000/api/v1/tiles`;
         const query_params = `?url=${data.file_url}`
-  
+
         // Add the COG tile layer to the map
         L.tileLayer(`${this.tileUrl}/{z}/{x}/{y}.png${query_params}`, {
           tileSize: 256,
           maxZoom: 22,
-          
+          crs: L.CRS.EPSG4326,
         }).addTo(this.map);
 
         // Update the map view to focus on the bounds
-        const bounds = [
-            [data.bounds[1], data.bounds[0]], // Southwest corner (miny, minx)
-            [data.bounds[3], data.bounds[2]], // Northeast corner (maxy, maxx)
-        ];
-        this.map.fitBounds(bounds);
+        const image_endpoint = `http://localhost:8000/api/v1/bounds?url=${data.file_url}`
+        await fetch(image_endpoint)
+        .then(response => response.json())
+        .then(data => {
+            const bounds = [[data.bounds[1], data.bounds[0]], [data.bounds[3], data.bounds[2]]];
+            this.map.fitBounds(bounds); // Zoom and center map on bounds
+        });
+
       },
     },
   };
