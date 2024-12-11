@@ -2,6 +2,18 @@
 docker-compose.yml
 docker-compose.override.yml
 
+# Ignore python artifacts
+__pycache__/
+*.pyc
+.env
+env/
+.venv
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Ignore other unnecessary files
 .git
 .gitignore

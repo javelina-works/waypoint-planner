@@ -42,8 +42,8 @@ def initialize_data(server_context, logger):
 def on_session_created(session_context):
     """Create a session-specific layout."""
 
-    logger = setup_logger(name="waypoint_planner", log_level=logging.DEBUG)
-    logger.debug(f'on_session_created: {id(session_context)}')
+    logger = setup_logger(name="waypoint_planner", log_level=logging.INFO)
+    logger.info(f'on_session_created: {id(session_context)}')
 
     # server_context = session_context.server_context
     initialize_data(session_context, logger)
@@ -57,12 +57,12 @@ def on_session_created(session_context):
     # Define layout and add to the document
     image_container = column(file_upload, image_figure)
     image_container.sizing_mode = "stretch_both"
-
     add_image_tools(image_figure, marker_source)
+
     data_col = create_data_col(image_figure, marker_source)
     planner_row = row(image_container, data_col)
     planner_row.sizing_mode = "stretch_both"
 
     setattr(session_context, 'planner_row', planner_row) # Pass to session, add to doc there
 
-    logger.debug(f"on_session_created complete: {curdoc().roots}")
+    logger.info(f"on_session_created complete: {id(session_context)}")

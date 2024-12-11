@@ -4,6 +4,11 @@ An interactive Bokeh application for exploring georeferenced images and planning
 Designed neither for efficiency nor scalability, this app is a prototype for quick field use.
 
 
+## Folium and rio-tiler server
+
+Tile server: `uvicorn tile_server:app --reload --host 0.0.0.0 --port 8000`
+
+
 ## Features
 - **Interactive Image Viewer:** Upload GeoTIFF images with support for RGBA and 3-band formats.
 - **Dynamic Waypoint Creation:** Click to place waypoints on the map.
@@ -56,7 +61,7 @@ Designed neither for efficiency nor scalability, this app is a prototype for qui
     OR to emulate the production environment:
 
     ```bash
-    docker run --cpus="2" --memory="512m" --memory-swap="512m" --cpu-quota=20000 -p 5006:5006 waypoint-planner 
+    docker run --cpus="2" --memory="512m" --memory-swap="512m" -p 5006:5006 waypoint-planner 
     ```
 
 ## Usage Instructions
