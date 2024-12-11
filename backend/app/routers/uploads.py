@@ -2,6 +2,7 @@
 from fastapi import APIRouter, File, UploadFile
 import shutil
 from pathlib import Path
+from rio_tiler.io import Reader
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -18,4 +19,12 @@ async def upload_image(file: UploadFile = File(...)):
     filepath = UPLOAD_DIR / file.filename
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    return {"filename": file.filename, "url": f"/tiles/{file.filename}"}
+
+    with Reader(filepath) as cog:
+        bounds = cog.bounds # (minx, miny, maxx, maxy)
+
+    return {
+        "filename": file.filename, 
+        "url": f"/tiles/{file.filename}",
+        "bounds": bounds,    
+    }

@@ -51,8 +51,16 @@
         // Add the COG tile layer to the map
         L.tileLayer(`${this.tileUrl}/{z}/{x}/{y}.png`, {
           tileSize: 256,
-          maxZoom: 19,
+          maxZoom: 22,
+          
         }).addTo(this.map);
+
+        // Update the map view to focus on the bounds
+        const bounds = [
+            [data.bounds[1], data.bounds[0]], // Southwest corner (miny, minx)
+            [data.bounds[3], data.bounds[2]], // Northeast corner (maxy, maxx)
+        ];
+        this.map.fitBounds(bounds);
       },
     },
   };
