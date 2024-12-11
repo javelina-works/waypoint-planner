@@ -2,5 +2,9 @@ fastapi==0.115.6
 numpy==2.2.0
 Pillow==11.0.0
 pydantic==2.10.3
+rasterio==1.4.3
+rio_cogeo==5.4.0
 rio_tiler==7.2.2
 SQLAlchemy==2.0.36
+titiler==0.19.2
+uvicorn==0.32.1

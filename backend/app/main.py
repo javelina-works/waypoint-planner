@@ -62,7 +62,7 @@ async def handle_tile_out_of_bounds(request, exc):
 
 
 # Serve static files from the Vue build directory
-# app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="static")
+app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="static")
 
 
 # # Define the directory where images are uploaded
