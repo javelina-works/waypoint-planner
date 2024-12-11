@@ -5,12 +5,13 @@
       <p v-if="tileUrl">Tile URL: {{ tileUrl }}</p>
       <div id="map"></div>
     </div>
-  </template>
+</template>
   
   <script>
   import L from "leaflet";
   
   export default {
+    name: 'Waypoint Planner',
     data() {
       return {
         tileUrl: null,
@@ -26,6 +27,7 @@
       // Add a tile layer placeholder
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
+        attribution: '© OpenStreetMap contributors',
       }).addTo(this.map);
     },
     methods: {
