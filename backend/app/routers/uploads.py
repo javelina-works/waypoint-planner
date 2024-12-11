@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-UPLOAD_DIR = Path("./uploaded_images")
+SERVER_ENV = "local"
+
+UPLOAD_DIR = Path("uploaded_images")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload")
@@ -23,8 +25,21 @@ async def upload_image(file: UploadFile = File(...)):
     with Reader(filepath) as cog:
         bounds = cog.bounds # (minx, miny, maxx, maxy)
 
+    # relative_path = f"./uploaded_images/{file.filename}"
+    # file_path = filepath
+    # file_path = filepath.absolute().as_posix()
+    
+    # Determine which URL to return
+    if SERVER_ENV == "local":
+        # file_path = str(filepath.absolute()).replace("\\", "/")
+        file_path = filepath
+        file_url = f"file://{file_path}"
+    else:
+        file_url = f"http://localhost:8000/uploaded_images/{file.filename}"
+
+
     return {
         "filename": file.filename, 
-        "url": f"/tiles/{file.filename}",
+        "file_url": file_url,
         "bounds": bounds,    
     }

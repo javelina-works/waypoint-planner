@@ -46,10 +46,12 @@
   
         const data = await response.json();
         console.log(data);
-        this.tileUrl = `http://localhost:8000/api/v1${data.url}`;
+
+        this.tileUrl = `http://localhost:8000/api/v1/WebMercatorQuad`;
+        const query_params = `?url=${data.file_url}`
   
         // Add the COG tile layer to the map
-        L.tileLayer(`${this.tileUrl}/{z}/{x}/{y}.png`, {
+        L.tileLayer(`${this.tileUrl}/{z}/{x}/{y}.png${query_params}`, {
           tileSize: 256,
           maxZoom: 22,
           

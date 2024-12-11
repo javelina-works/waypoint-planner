@@ -1,12 +1,14 @@
 # Interactive App Backend
 
 ## TODOs
-- [ ] Add frontend service + container
-    - [ ] Folium frontend display
-    - [ ] Connect to custom tile server!
-- [ ] Add ability to upload files to service
+- [x] Add frontend service + container
+    - [x] Folium frontend display
+    - [x] Connect to custom tile server!
+- [x] Add ability to upload files to service
 - [ ] Add tile server for uploaded image(s)
 
+- Remember SERVER_ENV in uploads.py
+    - Serving local file for now, perhaps S3 if shipping service
 
 ## Running the Server
 
