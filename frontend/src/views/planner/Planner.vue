@@ -49,7 +49,7 @@
         const data = await response.json();
         console.log(data);
 
-        this.tileUrl = `http://localhost:8000/api/v1/tiles/CDB1GlobalGrid`;
+        this.tileUrl = `http://localhost:8000/api/v1/tiles/WebMercatorQuad`;
         // this.tileUrl = `http://localhost:8000/api/v1/tiles`;
         const query_params = `?url=${data.file_url}`
 
