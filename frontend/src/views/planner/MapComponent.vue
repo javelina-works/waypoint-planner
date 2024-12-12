@@ -60,7 +60,12 @@ export default {
       formData.append("file", file);
 
       // Send file to the backend
-      const response = await fetch("http://localhost:80/api/v1/upload", {
+      // const backendURL = "http://localhost:80/";
+      const backendURL = "https://truthful-serenity-production.up.railway.app/";
+      const uploadApiRoute = "api/v1/upload";
+
+      const uploadURL = backendURL + uploadApiRoute
+      const response = await fetch(uploadURL, {
         method: "POST",
         body: formData,
         headers: {
@@ -72,7 +77,8 @@ export default {
       const data = await response.json();
       console.log(data);
 
-      this.tileUrl = `http://localhost:80/api/v1/tiles/WebMercatorQuad`;
+      const tileApiRoute = "api/v1/tiles/WebMercatorQuad";
+      this.tileUrl = backendURL + tileApiRoute;
       // this.tileUrl = `http://localhost:8000/api/v1/tiles`;
       const query_params = `?url=${data.file_url}`
 
@@ -84,7 +90,8 @@ export default {
       }).addTo(this.map);
 
       // Update the map view to focus on the bounds
-      const image_endpoint = `http://localhost:80/api/v1/bounds?url=${data.file_url}`
+      const boundsApiRoute = `api/v1/bounds?url=${data.file_url}`;
+      const image_endpoint = backendURL + boundsApiRoute;
       await fetch(image_endpoint)
         .then(response => response.json())
         .then(data => {
