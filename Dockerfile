@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 WORKDIR /app/backend
 COPY --from=frontend-builder /app/frontend/dist/ /app/frontend/dist
+# COPY --from=frontend-builder /app/frontend/dist/ /app/frontend/dist
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
