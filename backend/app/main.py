@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import waypoints, tiles, uploads
+from app.routers import waypoints, uploads
 from app.db import engine, Base
 from titiler.core.factory import TilerFactory
 from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers, TileOutsideBounds
@@ -39,7 +39,7 @@ app = FastAPI(lifespan=app_lifespan)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allow only your frontend origin
+    allow_origins=["http://localhost:3000", "*"],  # Allow only your frontend origin
     allow_methods=["GET", "POST"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
     allow_credentials=True,

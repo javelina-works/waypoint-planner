@@ -60,7 +60,7 @@ export default {
       formData.append("file", file);
 
       // Send file to the backend
-      const response = await fetch("http://localhost:8000/api/v1/upload", {
+      const response = await fetch("http://localhost:80/api/v1/upload", {
         method: "POST",
         body: formData,
         headers: {
@@ -72,7 +72,7 @@ export default {
       const data = await response.json();
       console.log(data);
 
-      this.tileUrl = `http://localhost:8000/api/v1/tiles/WebMercatorQuad`;
+      this.tileUrl = `http://localhost:80/api/v1/tiles/WebMercatorQuad`;
       // this.tileUrl = `http://localhost:8000/api/v1/tiles`;
       const query_params = `?url=${data.file_url}`
 
@@ -84,7 +84,7 @@ export default {
       }).addTo(this.map);
 
       // Update the map view to focus on the bounds
-      const image_endpoint = `http://localhost:8000/api/v1/bounds?url=${data.file_url}`
+      const image_endpoint = `http://localhost:80/api/v1/bounds?url=${data.file_url}`
       await fetch(image_endpoint)
         .then(response => response.json())
         .then(data => {

@@ -2,7 +2,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 import shutil
 from pathlib import Path
-from rio_tiler.io import Reader
+# from rio_tiler.io import Reader
 # from pyproj import Transformer
 import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
@@ -70,7 +70,7 @@ async def upload_image(file: UploadFile = File(...)):
         # file_path = str(filepath.absolute()).replace("\\", "/")
         file_url = f"file://{filepath}"
     else:
-        file_url = f"http://localhost:8000/{filepath}"
+        file_url = f"http://localhost:80/{filepath}"
 
 
     return {

@@ -7,8 +7,11 @@
 - [x] Add ability to upload files to service
 - [ ] Add tile server for uploaded image(s)
 
+
 - Remember SERVER_ENV in uploads.py
     - Serving local file for now, perhaps S3 if shipping service
+- Need to find a way to pass ENV to frontend for API endpoint, port
+    - Is this why WebODM handles tiling internally vs API endpoint call?
 
 ## Running the Server
 
