@@ -12,6 +12,7 @@
     - Serving local file for now, perhaps S3 if shipping service
 - Need to find a way to pass ENV to frontend for API endpoint, port
     - Is this why WebODM handles tiling internally vs API endpoint call?
+- Learn to sign commits from Git Kraken (new pgp key? old one?)
 
 ## Running the Server
 

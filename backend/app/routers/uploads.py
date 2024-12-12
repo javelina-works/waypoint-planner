@@ -70,7 +70,7 @@ async def upload_image(file: UploadFile = File(...)):
         # file_path = str(filepath.absolute()).replace("\\", "/")
         file_url = f"file://{filepath}"
     else:
-        file_url = f"http://localhost:80/{filepath}"
+        file_url = f"http://localhost:8000/{filepath}"
 
 
     return {
